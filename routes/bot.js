@@ -4,15 +4,30 @@ const express = require('express');
 const request = require('request');
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.status(200).send('ODD Bot deployed!');
-});
+// App Secret can be retrieved from the App Dashboard
+const APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 
-router.get('/webhook', (req, res) => {
-  if (req.query['hub.verify_token'] === process.env.FACEBOOK_VERIFICATION_TOKEN) {
+// Arbitrary value used to validate a webhook
+const VALIDATION_TOKEN = process.env.FACEBOOK_VALIDATION_TOKEN;
+
+// Generate a page access token for your page from the App Dashboard
+const PAGE_ACCESS_TOKEN = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+
+// URL where the app is running (include protocol). Used to point to scripts and assets located at this address.
+const SERVER_URL = process.env.FACEBOOK_SERVER_URL;
+
+if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN)) {
+  console.error('Missing config values');
+  process.exit(1);
+}
+
+router.get('/webhook', function(req, res) {
+  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VALIDATION_TOKEN) {
+    console.log('Validating webhook');
     res.status(200).send(req.query['hub.challenge']);
   } else {
-    res.status(403).send('Verification failed. The tokens do not match.');
+    console.error('Failed validation. Make sure the validation tokens match.');
+    res.sendStatus(403);
   }
 });
 
