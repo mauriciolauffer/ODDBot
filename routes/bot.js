@@ -573,29 +573,114 @@ function sendListMessage(recipientId) {
           'top_element_style': 'compact',
           'elements': [
             {
-              'title': 'Classic T-Shirt Collection',
-              'subtitle': 'See all our colors',
+              'title': 'Solution Manager',
+              'subtitle': 'See all servers',
               'buttons': [{
                 type: 'postback',
-                title: 'Start Server',
+                title: 'Select group',
+                payload: JSON.stringify({
+                  menu: 'servers',
+                  selected: 'solman'
+                })
+              }]
+            },
+            {
+              'title': 'SAP NetWeaver',
+              'subtitle': 'See all servers',
+              'buttons': [{
+                type: 'postback',
+                title: 'Select group',
+                payload: JSON.stringify({
+                  menu: 'servers',
+                  selected: 'netweaver'
+                })
+              }]
+            },
+            {
+              'title': 'HANA Native',
+              'subtitle': 'See all servers',
+              'buttons': [{
+                type: 'postback',
+                title: 'Select group',
+                payload: JSON.stringify({
+                  menu: 'servers',
+                  selected: 'hana'
+                })
+              }]
+            }
+          ],
+          'buttons': [
+            {
+              'title': 'View More',
+              'type': 'postback',
+              'payload': JSON.stringify({
+                menu: 'servers',
+                selected: 'more'
+              })
+            }
+          ]
+        }
+      }
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function sendFullListMessage(recipientId) {
+  const messageData = {
+    'recipient': {
+      'id': recipientId
+    },
+    'message': {
+      'attachment': {
+        'type': 'template',
+        'payload': {
+          'template_type': 'list',
+          'top_element_style': 'compact',
+          'elements': [
+            {
+              'title': 'Solution Manager',
+              'subtitle': 'See all servers',
+              'buttons': [{
+                type: 'postback',
+                title: 'Select group',
                 payload: 'start'
               }]
             },
             {
-              'title': 'Classic White T-Shirt',
-              'subtitle': 'See all our colors',
+              'title': 'SAP NetWeaver',
+              'subtitle': 'See all servers',
               'buttons': [{
                 type: 'postback',
-                title: 'Start Server',
+                title: 'Select group',
                 payload: 'start'
               }]
             },
             {
-              'title': 'Classic Blue T-Shirt',
-              'subtitle': '100% Cotton, 200% Comfortable',
+              'title': 'SAP Mobility',
+              'subtitle': 'See all servers',
               'buttons': [{
                 type: 'postback',
-                title: 'Start Server 03',
+                title: 'Select group',
+                payload: 'start'
+              }]
+            },
+            {
+              'title': 'SAP Business Suite',
+              'subtitle': 'See all servers',
+              'buttons': [{
+                type: 'postback',
+                title: 'Select group',
+                payload: 'start'
+              }]
+            },
+            {
+              'title': 'HANA Native',
+              'subtitle': 'See all servers',
+              'buttons': [{
+                type: 'postback',
+                title: 'Select group',
                 payload: 'start'
               }]
             }
