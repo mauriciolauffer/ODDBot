@@ -575,38 +575,29 @@ function sendListMessage(recipientId) {
             {
               'title': 'Classic T-Shirt Collection',
               'subtitle': 'See all our colors',
-              'buttons': [
-                {
-                  type: 'postback',
-                  title: 'Start Server',
-                  payload: 'start'
-                }
-              ]
+              'buttons': [{
+                type: 'postback',
+                title: 'Start Server',
+                payload: 'start'
+              }]
             },
             {
               'title': 'Classic White T-Shirt',
               'subtitle': 'See all our colors',
-              'default_action': {
+              'buttons': [{
                 type: 'postback',
-                title: 'Start Server 01',
+                title: 'Start Server',
                 payload: 'start'
-              }
+              }]
             },
             {
               'title': 'Classic Blue T-Shirt',
               'subtitle': '100% Cotton, 200% Comfortable',
-              'default_action': {
+              'buttons': [{
                 type: 'postback',
-                title: 'Start Server 02',
+                title: 'Start Server 03',
                 payload: 'start'
-              },
-              'buttons': [
-                {
-                  type: 'postback',
-                  title: 'Start Server 03',
-                  payload: 'start'
-                }
-              ]
+              }]
             }
           ],
           'buttons': [
