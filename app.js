@@ -1,7 +1,5 @@
 'use strict';
 
-global.__appRoot = __dirname;
-
 const bodyParser = require('body-parser');
 const compression = require('compression');
 const helmet = require('helmet');
