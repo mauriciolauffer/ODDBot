@@ -4,9 +4,9 @@ const crypto = require('crypto');
 const express = require('express');
 const request = require('request');
 const router = express.Router();
-const lists = require('./controllers/elementsLists');
 
-console.dir(lists);
+/*const lists = require('./controllers/elementsLists');
+console.dir(lists);*/
 
 const MENU = {
   GROUPS: 'groups',
