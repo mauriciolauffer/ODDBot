@@ -65,20 +65,22 @@ router.post('/webhook', function(req, res) {
       console.dir(pageEntry.messaging);
       // Iterate over each messaging event
       pageEntry.messaging.forEach(function(messagingEvent) {
-        if (messagingEvent.optin) {
-          receivedAuthentication(messagingEvent);
-        } else if (messagingEvent.message) {
-          receivedMessage(messagingEvent);
-        } else if (messagingEvent.delivery) {
-          receivedDeliveryConfirmation(messagingEvent);
-        } else if (messagingEvent.postback) {
-          receivedPostback(messagingEvent);
-        } else if (messagingEvent.read) {
-          receivedMessageRead(messagingEvent);
-        } else if (messagingEvent.account_linking) {
-          receivedAccountLink(messagingEvent);
-        } else {
-          console.log('Webhook received unknown messagingEvent: ', messagingEvent);
+        if (messagingEvent.is_echo) {
+          if (messagingEvent.optin) {
+            receivedAuthentication(messagingEvent);
+          } else if (messagingEvent.message) {
+            receivedMessage(messagingEvent);
+          } else if (messagingEvent.delivery) {
+            receivedDeliveryConfirmation(messagingEvent);
+          } else if (messagingEvent.postback) {
+            receivedPostback(messagingEvent);
+          } else if (messagingEvent.read) {
+            receivedMessageRead(messagingEvent);
+          } else if (messagingEvent.account_linking) {
+            receivedAccountLink(messagingEvent);
+          } else {
+            console.log('Webhook received unknown messagingEvent: ', messagingEvent);
+          }
         }
       });
     });
@@ -166,7 +168,7 @@ function receivedAuthentication(event) {
 
   console.log('Received authentication for user %d and page %d with pass ' +
     "through param '%s' at %d", senderID, recipientID, passThroughParam,
-              timeOfAuth);
+    timeOfAuth);
 
   // When an authentication is received, we'll send a message back to the sender
   // to let them know it was successful.
@@ -194,7 +196,7 @@ function receivedMessage(event) {
   var message = event.message;
 
   console.log('Received message for user %d and page %d at %d with message:',
-              senderID, recipientID, timeOfMessage);
+    senderID, recipientID, timeOfMessage);
   console.log(JSON.stringify(message));
 
   var isEcho = message.is_echo;
@@ -210,12 +212,12 @@ function receivedMessage(event) {
   if (isEcho) {
     // Just logging message echoes to console
     console.log('Received echo for message %s and app %d with metadata %s',
-                messageId, appId, metadata);
+      messageId, appId, metadata);
     return;
   } else if (quickReply) {
     var quickReplyPayload = quickReply.payload;
     console.log('Quick reply for message %s with payload %s',
-                messageId, quickReplyPayload);
+      messageId, quickReplyPayload);
 
     sendTextMessage(senderID, 'Quick reply tapped');
     return;
@@ -319,7 +321,7 @@ function receivedDeliveryConfirmation(event) {
   if (messageIDs) {
     messageIDs.forEach(function(messageID) {
       console.log('Received delivery confirmation for message ID: %s',
-                  messageID);
+        messageID);
     });
   }
 
@@ -395,6 +397,11 @@ function handlePostbackPayload(recipientID, postbackPayload) {
   switch (payload.menu) {
     case MENU.GROUPS:
       handleMenuServerGroups(recipientID, payload.group);
+      break;
+    case MENU.SERVERS:
+      handleMenuServers(recipientID, payload.server);
+      break;
+    default:
   }
 }
 
@@ -411,11 +418,27 @@ function handleMenuServerGroups(recipientID, group) {
     case GROUP.NETWEAVER:
       break;
     default:
-      break;
   }
   return message;
 }
 
+function handleMenuServers(recipientID, serve) {
+  let message = {};
+  switch (serve) {
+    case GROUP.VIEW_MORE:
+      message = sendServerGroupsListMessage(recipientID, true);
+      break;
+    case GROUP.SOLMAN:
+      break;
+    case GROUP.HANA:
+      break;
+    case GROUP.NETWEAVER:
+      break;
+    default:
+      break;
+  }
+  return message;
+}
 
 /*
  * If users came here through testdrive, they need to configure the server URL
@@ -935,10 +958,10 @@ function callSendAPI(messageData) {
 
       if (messageId) {
         console.log('Successfully sent message with id %s to recipient %s',
-                    messageId, recipientId);
+          messageId, recipientId);
       } else {
         console.log('Successfully called Send API for recipient %s',
-                    recipientId);
+          recipientId);
       }
     } else {
       console.error('Failed calling Send API', response.statusCode, response.statusMessage, body.error);
