@@ -4,6 +4,23 @@ const crypto = require('crypto');
 const express = require('express');
 const request = require('request');
 const router = express.Router();
+const lists = require('./controllers/elementsLists');
+
+console.dir(lists);
+
+const MENU = {
+  GROUPS: 'groups',
+  SERVERS: 'servers'
+};
+
+const GROUP = {
+  VIEW_MORE: 'more',
+  SOLMAN: 'servers',
+  NETWEAVER: 'netweaver',
+  HANA: 'hana',
+  MOBILITY: 'mobility',
+  ECC: 'ecc'
+};
 
 //router.use(bodyParser.json({ verify: verifyRequestSignature }));
 
@@ -121,7 +138,7 @@ function verifyRequestSignature(req, res, buf) {
       .update(buf)
       .digest('hex');
 
-    if (signatureHash != expectedHash) {
+    if (signatureHash !== expectedHash) {
       throw new Error("Couldn't validate the request signature.");
     }
   }
@@ -272,7 +289,7 @@ function receivedMessage(event) {
         break;
 
       case 'list':
-        sendListMessage(senderID);
+        sendServerGroupsListMessage(senderID, false);
         break;
 
       default:
@@ -308,32 +325,6 @@ function receivedDeliveryConfirmation(event) {
 
   console.log('All message before %d were delivered.', watermark);
 }
-
-
-/*
- * Postback Event
- *
- * This event is called when a postback is tapped on a Structured Message.
- * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
- *
- */
-function receivedPostback(event) {
-  var senderID = event.sender.id;
-  var recipientID = event.recipient.id;
-  var timeOfPostback = event.timestamp;
-
-  // The 'payload' param is a developer-defined field which is set in a postback
-  // button for Structured Messages.
-  var payload = event.postback.payload;
-
-  console.log("Received postback for user %d and page %d with payload '%s' " +
-    'at %d', senderID, recipientID, payload, timeOfPostback);
-
-  // When a postback is called, we'll send a message back to the sender to
-  // let them know it was successful
-  sendTextMessage(senderID, 'Postback called');
-}
-
 /*
  * Message Read Event
  *
@@ -371,6 +362,60 @@ function receivedAccountLink(event) {
   console.log('Received account link event with for user %d with status %s ' +
     'and auth code %s ', senderID, status, authCode);
 }
+
+
+/*
+ * Postback Event
+ *
+ * This event is called when a postback is tapped on a Structured Message.
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
+ *
+ */
+function receivedPostback(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfPostback = event.timestamp;
+
+  // The 'payload' param is a developer-defined field which is set in a postback
+  // button for Structured Messages.
+  var payload = event.postback.payload;
+
+  handlePostbackPayload(recipientID, event.postback.payload);
+
+  console.log("Received postback for user %d and page %d with payload '%s' " +
+    'at %d', senderID, recipientID, payload, timeOfPostback);
+
+  // When a postback is called, we'll send a message back to the sender to
+  // let them know it was successful
+  sendTextMessage(senderID, 'Postback called');
+}
+
+function handlePostbackPayload(recipientID, postbackPayload) {
+  const payload = JSON.parse(postbackPayload);
+  switch (payload.menu) {
+    case MENU.GROUPS:
+      handleMenuServerGroups(recipientID, payload.group);
+  }
+}
+
+function handleMenuServerGroups(recipientID, group) {
+  let message = {};
+  switch (group) {
+    case GROUP.VIEW_MORE:
+      message = sendServerGroupsListMessage(recipientID, true);
+      break;
+    case GROUP.SOLMAN:
+      break;
+    case GROUP.HANA:
+      break;
+    case GROUP.NETWEAVER:
+      break;
+    default:
+      break;
+  }
+  return message;
+}
+
 
 /*
  * If users came here through testdrive, they need to configure the server URL
@@ -560,7 +605,7 @@ function sendMenuMessage(recipientId) {
   callSendAPI(messageData);
 }
 
-function sendListMessage(recipientId) {
+function sendServerGroupsListMessage(recipientId, allGroups) {
   const messageData = {
     'recipient': {
       'id': recipientId
@@ -571,51 +616,14 @@ function sendListMessage(recipientId) {
         'payload': {
           'template_type': 'list',
           'top_element_style': 'compact',
-          'elements': [
-            {
-              'title': 'Solution Manager',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: JSON.stringify({
-                  menu: 'servers',
-                  selected: 'solman'
-                })
-              }]
-            },
-            {
-              'title': 'SAP NetWeaver',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: JSON.stringify({
-                  menu: 'servers',
-                  selected: 'netweaver'
-                })
-              }]
-            },
-            {
-              'title': 'HANA Native',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: JSON.stringify({
-                  menu: 'servers',
-                  selected: 'hana'
-                })
-              }]
-            }
-          ],
+          'elements': getServerGroupsListElements(allGroups),
           'buttons': [
             {
               'title': 'View More',
               'type': 'postback',
               'payload': JSON.stringify({
-                menu: 'servers',
-                selected: 'more'
+                menu: MENU.GROUPS,
+                group: GROUP.VIEW_MORE
               })
             }
           ]
@@ -627,7 +635,7 @@ function sendListMessage(recipientId) {
   callSendAPI(messageData);
 }
 
-function sendFullListMessage(recipientId) {
+function sendServersListMessage(recipientId, group) {
   const messageData = {
     'recipient': {
       'id': recipientId
@@ -638,60 +646,7 @@ function sendFullListMessage(recipientId) {
         'payload': {
           'template_type': 'list',
           'top_element_style': 'compact',
-          'elements': [
-            {
-              'title': 'Solution Manager',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: 'start'
-              }]
-            },
-            {
-              'title': 'SAP NetWeaver',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: 'start'
-              }]
-            },
-            {
-              'title': 'SAP Mobility',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: 'start'
-              }]
-            },
-            {
-              'title': 'SAP Business Suite',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: 'start'
-              }]
-            },
-            {
-              'title': 'HANA Native',
-              'subtitle': 'See all servers',
-              'buttons': [{
-                type: 'postback',
-                title: 'Select group',
-                payload: 'start'
-              }]
-            }
-          ],
-          'buttons': [
-            {
-              'title': 'View More',
-              'type': 'postback',
-              'payload': 'payload'
-            }
-          ]
+          'elements': getServersListElements(group)
         }
       }
     }
@@ -989,6 +944,122 @@ function callSendAPI(messageData) {
       console.error('Failed calling Send API', response.statusCode, response.statusMessage, body.error);
     }
   });
+}
+
+function getServerGroupsListElements(allList) {
+  const elements = [
+    {
+      title: 'Solution Manager',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.SOLMAN
+        })
+      }]
+    },
+    {
+      title: 'SAP NetWeaver',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.NETWEAVER
+        })
+      }]
+    },
+    {
+      title: 'HANA Native',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.HANA
+        })
+      }]
+    },
+    {
+      title: 'SAP Mobility',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.MOBILITY
+        })
+      }]
+    },
+    {
+      title: 'SAP Business Suite',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.ECC
+        })
+      }]
+    }
+  ];
+
+  if (!allList) {
+    for (let i = 0; i < 3; i++) {
+      elements.pop();
+    }
+  }
+
+  return elements;
+}
+
+function getServersListElements(group) {
+  const elements = [
+    {
+      title: 'ABC',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.SOLMAN
+        })
+      }]
+    },
+    {
+      title: 'POI',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.NETWEAVER
+        })
+      }]
+    },
+    {
+      title: 'LALALA',
+      subtitle: 'See all servers',
+      buttons: [{
+        type: 'postback',
+        title: 'Select group',
+        payload: JSON.stringify({
+          menu: MENU.GROUPS,
+          group: GROUP.ECC
+        })
+      }]
+    }
+  ];
+
+  return elements;
 }
 
 module.exports = router;
