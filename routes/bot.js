@@ -384,10 +384,10 @@ function receivedPostback(event) {
 
   console.log("Received postback for user %d and page %d with payload '%s' " +
     'at %d', senderID, recipientID, payload, timeOfPostback);
-
+  return;
   // When a postback is called, we'll send a message back to the sender to
   // let them know it was successful
-  sendTextMessage(senderID, 'Postback called');
+//  sendTextMessage(senderID, 'Postback called');
 }
 
 function handlePostbackPayload(recipientID, postbackPayload) {
