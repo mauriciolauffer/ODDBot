@@ -65,7 +65,7 @@ router.post('/webhook', function(req, res) {
       console.dir(pageEntry.messaging);
       // Iterate over each messaging event
       pageEntry.messaging.forEach(function(messagingEvent) {
-        if (messagingEvent.is_echo) {
+        if (!messagingEvent.is_echo) {
           if (messagingEvent.optin) {
             receivedAuthentication(messagingEvent);
           } else if (messagingEvent.message) {
